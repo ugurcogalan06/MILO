@@ -136,7 +136,6 @@ def map_visualization(input):
     output = CHWtoHWC(index2color(np.round(input * 255.0), get_magma_map()))
 
     return output
-
     
 if __name__ == '__main__':
 
