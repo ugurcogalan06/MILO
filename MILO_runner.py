@@ -66,20 +66,17 @@ class MILO(torch.nn.Module):
         self.load_state_dict(torch.load(model_path, map_location='cpu'), strict=True)
 
 
-    def mask_generator(self, y, x):
+    def mask_generator(self, x, y):
         B, C, H, W = y.shape[0:4]
 
         refScale = [x]
         distScale = [y]
 
         for intLevel in range(self.number_of_scales):
-            # if tenOne[0].shape[2] > 32 or tenOne[0].shape[3] > 32:
             refScale.insert(0, torch.nn.functional.avg_pool2d(input=refScale[0], kernel_size=2, stride=2,
                                                               count_include_pad=False))
             distScale.insert(0, torch.nn.functional.avg_pool2d(input=distScale[0], kernel_size=2, stride=2,
                                                                count_include_pad=False))
-            # end
-        # end
 
         mask = refScale[0].new_zeros([refScale[0].shape[0], 1, int(math.floor(refScale[0].shape[2] / 2.0)),
                                       int(math.floor(refScale[0].shape[3] / 2.0))])
@@ -136,6 +133,7 @@ def map_visualization(input):
     output = CHWtoHWC(index2color(np.round(input * 255.0), get_magma_map()))
 
     return output
+
     
 if __name__ == '__main__':
 
