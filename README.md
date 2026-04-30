@@ -80,7 +80,9 @@ If you use MILO in your research, please cite:
 }
 ```
 
-Acknowledgments 
+You may also refer to our earlier paper: https://github.com/ugurcogalan06/Enhanced-IQM/
+
+Acknowledgments
 ---------------
 
 This project was produced by research at the

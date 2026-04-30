@@ -66,20 +66,17 @@ class MILO(torch.nn.Module):
         self.load_state_dict(torch.load(model_path, map_location='cpu'), strict=True)
 
 
-    def mask_generator(self, y, x):
+    def mask_generator(self, x, y):
         B, C, H, W = y.shape[0:4]
 
         refScale = [x]
         distScale = [y]
 
         for intLevel in range(self.number_of_scales):
-            # if tenOne[0].shape[2] > 32 or tenOne[0].shape[3] > 32:
             refScale.insert(0, torch.nn.functional.avg_pool2d(input=refScale[0], kernel_size=2, stride=2,
                                                               count_include_pad=False))
             distScale.insert(0, torch.nn.functional.avg_pool2d(input=distScale[0], kernel_size=2, stride=2,
                                                                count_include_pad=False))
-            # end
-        # end
 
         mask = refScale[0].new_zeros([refScale[0].shape[0], 1, int(math.floor(refScale[0].shape[2] / 2.0)),
                                       int(math.floor(refScale[0].shape[3] / 2.0))])
@@ -99,13 +96,22 @@ class MILO(torch.nn.Module):
         return mask
 
 
-    def forward(self, y, x, as_loss=True, resize = True):
+    def forward(self, y, x):
 
         mask = self.mask_generator(x, y)
 
         score = ((mask * torch.abs(x - y))).mean()
 
         return score 
+
+    def MOS_score(self, y, x):
+        
+        mask = self.mask_generator(x, y)
+
+        score = ((mask * torch.abs(x - y))).mean()
+
+        return 5 * (1 - self.scaler_network(score.reshape(1,1,1,1)))
+
 
     def MILO_map(self, y, x):
 
@@ -120,9 +126,6 @@ def prepare_image(image, resize = False, repeatNum = 1):
         image = transforms.functional.resize(image,256)
     image = transforms.ToTensor()(image)
     return image.unsqueeze(0).repeat(repeatNum,1,1,1)
-
-def sigmoid_scaling(input):
-	return torch.abs(1 - (2 / (1 + torch.exp(25 * input))))
 
 def map_visualization(input):
     
@@ -154,10 +157,11 @@ if __name__ == '__main__':
     raw_error_cpu = raw_error.detach().cpu().item()
     print('Raw Error: ' + str(raw_error_cpu))
     
+    MOS_score = model_milo.MOS_score(dist, ref)
+    MOS_score_cpu = MOS_score.detach().cpu().item()
+    print('MOS Score: ' + str(MOS_score_cpu))
+    
     MILO_err, MILO_mask = model_milo.MILO_map(dist, ref)
-
-    score = MILO_err.detach().squeeze().cpu().numpy().mean()
-    print('Quality Score: ' + str(score))
 
     MILO_err = map_visualization(MILO_err)
 
