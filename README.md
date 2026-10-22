@@ -51,6 +51,22 @@ python MILO_runner_latent.py --ref latents/ref.npy --dist latents/dist.npy
 
 The .npy files contain the latent space representation of the reference and distorted images.
 
+Using MILO as a Loss: MILO-weighted L1 
+--------------------------------------- 
+
+Using MILO directly as a training loss may require some customization. Martin ([@balintio](https://github.com/balintio)) has put together an extension that turns the MILO visibility mask into bounded per-pixel weights for an L1 loss, with two intuitive knobs for tuning:
+
+🔗 **Repository:** [github.com/balintio/milo-loss](https://github.com/balintio/milo-loss)
+
+[![MILO-weighted L1: from raw mask to bounded weights](milo_loss_slide.png)](milo_loss_slide.pdf)
+
+In short, the raw MILO mask is log-transformed, standardized per image, soft-clipped with `tanh`, and exponentiated, so that the resulting weights stay in a bounded range. These weights (detached from the graph) then scale a standard L1 loss.
+
+**Tuning at a glance** (see the figure above and the repository for details):
+* **`target_weight_ratio` (S, strength)**, default ≈ 3.16: weights at the 90th and 10th percentile differ by roughly S×. Raise it (to ~5) if the regions MILO flags still show the most visible errors; lower it (to ~2, toward plain L1) if regions MILO deems unimportant lag behind.
+* **`max_weight_ratio` (R, outlier cap)**, default ≈ 10 (= S²): weights stay within (1/√R, √R). Raise it if many pixels pile up at the cap; lower it if a few hot spots dominate the loss.
+* **Recipe:** pick S for strength (2 mild, 3.16 default, 5 strong), set R = S², and only move R if the cap misbehaves. Since the mean weight (≈ loss scale) grows with S, retune the learning rate after large changes.
+
 Installation 
 ------------ 
 
