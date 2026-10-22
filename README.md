@@ -54,7 +54,7 @@ The .npy files contain the latent space representation of the reference and dist
 Using MILO as a Loss: MILO-weighted L1 
 --------------------------------------- 
 
-Using MILO directly as a training loss may require some customization. Martin ([@balintio](https://github.com/balintio)) has put together an extension that turns the MILO visibility mask into bounded per-pixel weights for an L1 loss, with two intuitive knobs for tuning:
+Using MILO directly as a training loss may require some customization. Martin Balint ([@balintio](https://github.com/balintio)) has put together an extension that turns the MILO visibility mask into bounded per-pixel weights for an L1 loss, with two intuitive knobs for tuning:
 
 🔗 **Repository:** [github.com/balintio/milo-loss](https://github.com/balintio/milo-loss)
 
